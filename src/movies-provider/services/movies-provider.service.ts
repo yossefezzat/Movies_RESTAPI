@@ -13,7 +13,7 @@ export class MoviesProviderService {
     providers: MovieProviderInterface[],
   ) {
     // Register all providers
-    providers.forEach(provider => {
+    providers.forEach((provider) => {
       this.providers.set(provider.getProviderName(), provider);
     });
 
@@ -40,11 +40,11 @@ export class MoviesProviderService {
   private getProvider(providerName?: string): MovieProviderInterface {
     const name = providerName || this.defaultProvider;
     const provider = this.providers.get(name);
-    
+
     if (!provider) {
       throw new Error(`Provider '${name}' is not registered`);
     }
-    
+
     return provider;
   }
 
@@ -64,7 +64,7 @@ export class MoviesProviderService {
    * @param providerName Optional provider name to use (uses default if not specified)
    * @returns Promise with MoviesClientList containing movies, pagination info
    */
-  async getMovies(page: number = 1, providerName?: string): Promise<MoviesClientList> {
+  async getMovies(page = 1, providerName?: string): Promise<MoviesClientList> {
     const provider = this.getProvider(providerName);
     return provider.getMovies(page);
   }
