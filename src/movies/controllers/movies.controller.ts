@@ -1,23 +1,22 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, UseInterceptors } from '@nestjs/common';
 import { MoviesService } from '../services/movies.service';
-import { Movie } from '../entities/movie.entity';
+import { ResponseInterceptor } from '../../common/interceptors/response.interceptor';
+import { PaginationDto } from '../../common/dto/pagination.dto';
+import { MoviesListResponseDto } from '../dto/movies-response.dto';
 
 @Controller('movies')
+@UseInterceptors(ResponseInterceptor)
 export class MoviesController {
   constructor(private readonly moviesService: MoviesService) {}
 
   @Get()
-  async findAll(
-    @Query('page') page = '1',
-    @Query('limit') limit = '20',
-  ): Promise<{ movies: Movie[]; total: number; totalPages: number; currentPage: number }> {
-    const pageNum = parseInt(page, 10);
-    const limitNum = parseInt(limit, 10);
-    const result = await this.moviesService.findAllMovies(pageNum, limitNum);
+  async findAll(@Query() paginationDto: PaginationDto): Promise<MoviesListResponseDto> {
+    const { page = 1, limit = 20 } = paginationDto;
+    const result = await this.moviesService.findAllMovies(page, limit);
 
     return {
       ...result,
-      currentPage: pageNum,
+      currentPage: page,
     };
   }
 }
