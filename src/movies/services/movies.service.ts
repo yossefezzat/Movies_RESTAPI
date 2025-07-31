@@ -15,6 +15,7 @@ export class MoviesService {
       skip: (page - 1) * limit,
       take: limit,
       order: { popularity: 'DESC' },
+      relations: ['genres'],
     });
 
     return {

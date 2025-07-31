@@ -1,22 +1,28 @@
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
-import { MoviesProviderController } from './controllers/movies-provider.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { SyncController } from './controllers/sync.controller';
 import { MoviesProviderService } from './services/movies-provider.service';
+import { DatabaseSyncService } from './services/database-sync.service';
 import { TmdbProvider } from './providers/tmdb.provider';
 import { TmdbClientService } from './providers/tmdb/services/tmdb-client.service';
+import { Movie } from '../movies/entities/movie.entity';
+import { Genre } from '../movies/entities/genre.entity';
 
 @Module({
   imports: [
     HttpModule.register({
-      timeout: 5000,
+      timeout: 30000,
       maxRedirects: 5,
     }),
     ConfigModule,
+    TypeOrmModule.forFeature([Movie, Genre]),
   ],
-  controllers: [MoviesProviderController],
+  controllers: [SyncController],
   providers: [
     MoviesProviderService,
+    DatabaseSyncService,
     TmdbProvider,
     {
       provide: 'TmdbClientInterface',
@@ -28,6 +34,6 @@ import { TmdbClientService } from './providers/tmdb/services/tmdb-client.service
       inject: [TmdbProvider],
     },
   ],
-  exports: [MoviesProviderService],
+  exports: [MoviesProviderService, DatabaseSyncService],
 })
 export class MoviesProviderModule {}

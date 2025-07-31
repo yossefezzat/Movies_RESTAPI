@@ -1,9 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable } from 'typeorm';
+import { Genre } from './genre.entity';
 
 @Entity('movies')
 export class Movie {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ type: 'varchar', length: 255 })
   title: string;
@@ -29,9 +30,6 @@ export class Movie {
   @Column({ type: 'decimal', precision: 8, scale: 3, default: 0 })
   popularity: number;
 
-  @Column({ name: 'genre_ids', type: 'jsonb', nullable: true })
-  genreIds: number[];
-
   @Column({ name: 'tmdb_id', type: 'integer', unique: true, nullable: true })
   tmdbId: number;
 
@@ -40,6 +38,20 @@ export class Movie {
 
   @Column({ name: 'rating_count', type: 'integer', default: 0 })
   ratingCount: number;
+
+  @ManyToMany(() => Genre)
+  @JoinTable({
+    name: 'movie_genres_genre',
+    joinColumn: {
+      name: 'movieId',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'genreId',
+      referencedColumnName: 'id',
+    },
+  })
+  genres: Genre[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

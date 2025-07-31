@@ -1,8 +1,8 @@
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
 import { join } from 'path';
-import { Genre } from 'src/movies/entities/genre.entity';
-import { Movie } from 'src/movies/entities/movie.entity';
+import { Genre } from '../movies/entities/genre.entity';
+import { Movie } from '../movies/entities/movie.entity';
 
 config({ path: process.cwd() + '/.env' });
 
@@ -14,7 +14,7 @@ const AppDataSource = new DataSource({
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
   entities: [Movie, Genre],
-  migrations: [join(__dirname, '..', 'database', 'migrations', '*.js')],
+  migrations: [join(__dirname, '..', 'database', 'migrations', '*.ts')],
   synchronize: false,
   migrationsRun: true,
   migrationsTransactionMode: 'each',

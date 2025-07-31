@@ -1,26 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, retry, catchError } from 'rxjs';
 import { TmdbClientInterface } from '../interfaces/tmdb-client.interface';
 import { Genre } from '../models/genre.model';
 import { Movie } from '../models/movie.model';
 import { MoviesClientList } from '../models/movies-client-list.model';
-import {
-  TmdbGenresResponse,
-  TmdbMovieResponse,
-  TmdbMoviesResponse,
-} from '../interfaces/tmdb-api-responses.interface';
+import { TmdbGenresResponse, TmdbMovieResponse, TmdbMoviesResponse } from '../interfaces/tmdb-api-responses.interface';
 
 @Injectable()
 export class TmdbClientService implements TmdbClientInterface {
   private readonly baseUrl: string;
   private readonly apiKey: string;
 
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly httpService: HttpService,
-  ) {
+  constructor(private readonly configService: ConfigService, private readonly httpService: HttpService) {
     const baseUrl = this.configService.get<string>('TMDB_API_URL');
     if (!baseUrl) {
       throw new Error('TMDB_API_URL is not defined in configuration');
@@ -39,18 +32,26 @@ export class TmdbClientService implements TmdbClientInterface {
    */
   async getGenres(): Promise<Genre[]> {
     const url = `${this.baseUrl}/genre/movie/list`;
-    
+
     try {
       const response = await firstValueFrom(
-        this.httpService.get<TmdbGenresResponse>(url, {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'accept': 'application/json'
-          }
-        })
+        this.httpService
+          .get<TmdbGenresResponse>(url, {
+            headers: {
+              Authorization: `Bearer ${this.apiKey}`,
+              accept: 'application/json',
+            },
+          })
+          .pipe(
+            retry({ count: 3, delay: 1000 }),
+            catchError((error) => {
+              console.error('HTTP request failed for genres:', error.message);
+              throw error;
+            }),
+          ),
       );
-      
-      return response.data.genres.map(genre => ({
+
+      return response.data.genres.map((genre) => ({
         id: genre.id,
         name: genre.name,
       }));
@@ -65,19 +66,27 @@ export class TmdbClientService implements TmdbClientInterface {
    * @param page The page number to fetch (default: 1)
    * @returns Promise with MoviesClientList containing movies, pagination info
    */
-  async getMovies(page: number = 1): Promise<MoviesClientList> {
+  async getMovies(page = 1): Promise<MoviesClientList> {
     const url = `${this.baseUrl}/movie/popular?language=en-US&page=${page}`;
-    
+
     try {
       const response = await firstValueFrom(
-        this.httpService.get<TmdbMoviesResponse>(url, {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'accept': 'application/json'
-          }
-        })
+        this.httpService
+          .get<TmdbMoviesResponse>(url, {
+            headers: {
+              Authorization: `Bearer ${this.apiKey}`,
+              accept: 'application/json',
+            },
+          })
+          .pipe(
+            retry({ count: 3, delay: 1000 }),
+            catchError((error) => {
+              console.error(`HTTP request failed for page ${page}:`, error.message);
+              throw error;
+            }),
+          ),
       );
-      
+
       return {
         movies: this.formatMovies(response.data.results),
         currentPage: response.data.page,
