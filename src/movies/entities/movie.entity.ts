@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, OneToMany } from 'typeorm';
 import { Genre } from './genre.entity';
+import { Rating } from './rating.entity';
 
 @Entity('movies')
 export class Movie {
@@ -52,6 +53,9 @@ export class Movie {
     },
   })
   genres: Genre[];
+
+  @OneToMany(() => Rating, (rating) => rating.movie)
+  ratings: Rating[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
