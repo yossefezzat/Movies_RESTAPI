@@ -27,6 +27,7 @@ describe('MoviesController', () => {
     averageRating: 4.2,
     ratingCount: 50,
     genres: ['Action'],
+    watchlistedByUsers: [],
     createdAt: new Date('2023-01-01T00:00:00Z'),
     updatedAt: new Date('2023-01-01T00:00:00Z'),
   };
