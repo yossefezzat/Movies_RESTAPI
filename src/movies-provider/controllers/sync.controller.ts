@@ -1,6 +1,5 @@
-import { Controller, Post, UseInterceptors } from '@nestjs/common';
+import { Controller, Post } from '@nestjs/common';
 import { DatabaseSyncService, SyncResult } from '../services/database-sync.service';
-import { ResponseInterceptor } from '../../common/interceptors/response.interceptor';
 
 export class SyncResponseDto {
   success: boolean;
@@ -13,7 +12,6 @@ export class SyncResponseDto {
 }
 
 @Controller('sync')
-@UseInterceptors(ResponseInterceptor)
 export class SyncController {
   constructor(private readonly databaseSyncService: DatabaseSyncService) {}
 
