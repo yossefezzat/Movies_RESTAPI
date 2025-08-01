@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Index, OneToMany } from 'typeorm';
+import { Watchlist } from '../../watchlist/entities/watchlist.entity';
 
 @Entity()
 export class User {
@@ -28,4 +29,7 @@ export class User {
     nullable: true,
   })
   refreshToken: string | null;
+
+  @OneToMany(() => Watchlist, (watchlist) => watchlist.user)
+  watchlist: Watchlist[];
 }

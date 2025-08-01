@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { MoviesProviderModule } from './movies-provider/movies-provider.module';
 import { MoviesModule } from './movies/movies.module';
 import { UsersModule } from './users/users.module';
+import { WatchlistModule } from './watchlist/watchlist.module';
 import appConfig from './config/app.config';
 import { envValidationSchema } from './config/env.validation';
 
@@ -25,6 +26,7 @@ import { envValidationSchema } from './config/env.validation';
     MoviesProviderModule,
     MoviesModule,
     UsersModule,
+    WatchlistModule,
   ],
   controllers: [AppController],
   providers: [AppService],
