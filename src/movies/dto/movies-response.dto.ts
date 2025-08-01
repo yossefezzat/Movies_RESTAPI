@@ -1,7 +1,7 @@
-import { Movie } from '../entities/movie.entity';
+import { MovieDto } from './movie.dto';
 
 export class MoviesListResponseDto {
-  movies: Movie[];
+  movies: MovieDto[];
   total: number;
   totalPages: number;
   currentPage: number;
