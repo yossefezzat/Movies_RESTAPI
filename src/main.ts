@@ -7,6 +7,7 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { TokenBucketRateLimitInterceptor } from './common/interceptors/token-bucket-rate-limit.interceptor';
 import { FixedWindowRateLimitInterceptor } from './common/interceptors/fixed-window-rate-limit.interceptor';
 import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,7 +17,7 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization', 'x-correlation-id'],
     credentials: true,
   });
-
+  app.use(helmet());
   app.setGlobalPrefix('api');
   app.useGlobalPipes(
     new ValidationPipe({
