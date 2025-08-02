@@ -45,7 +45,6 @@ export class TmdbClientService implements TmdbClientInterface {
           .pipe(
             retry({ count: 3, delay: 1000 }),
             catchError((error) => {
-              console.error('HTTP request failed for genres:', error.message);
               throw error;
             }),
           ),
@@ -56,7 +55,6 @@ export class TmdbClientService implements TmdbClientInterface {
         name: genre.name,
       }));
     } catch (error) {
-      console.error('Error fetching genres:', error.message);
       throw new Error(`Failed to fetch genres: ${error.message}`);
     }
   }
@@ -81,7 +79,6 @@ export class TmdbClientService implements TmdbClientInterface {
           .pipe(
             retry({ count: 3, delay: 1000 }),
             catchError((error) => {
-              console.error(`HTTP request failed for page ${page}:`, error.message);
               throw error;
             }),
           ),
@@ -93,7 +90,6 @@ export class TmdbClientService implements TmdbClientInterface {
         totalPages: response.data.total_pages,
       };
     } catch (error) {
-      console.error('Error fetching movies:', error.message);
       throw new Error(`Failed to fetch movies: ${error.message}`);
     }
   }

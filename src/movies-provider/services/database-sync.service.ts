@@ -107,7 +107,6 @@ export class DatabaseSyncService {
           totalPages = result.totalPages;
           currentPage++;
         } catch (error) {
-          console.error(`Failed to fetch page ${currentPage}:`, error.message);
           currentPage++;
           if (currentPage > maxPages) {
             break;
