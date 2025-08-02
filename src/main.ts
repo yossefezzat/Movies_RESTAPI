@@ -4,6 +4,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { TokenBucketRateLimitInterceptor } from './common/interceptors/token-bucket-rate-limit.interceptor';
+import { FixedWindowRateLimitInterceptor } from './common/interceptors/fixed-window-rate-limit.interceptor';
 import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
@@ -25,7 +27,13 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalInterceptors(new ResponseInterceptor());
+
+  const configService = app.get(ConfigService);
+  app.useGlobalInterceptors(
+    new ResponseInterceptor(),
+    new TokenBucketRateLimitInterceptor(configService),
+    new FixedWindowRateLimitInterceptor(configService),
+  );
 
   // Swagger configuration
   const config = new DocumentBuilder()
@@ -48,7 +56,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const configService = app.get(ConfigService);
   const port = configService.get<number>('app.port') || 8080;
   await app.listen(port);
 }
