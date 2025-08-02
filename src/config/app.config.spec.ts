@@ -30,7 +30,7 @@ describe('AppConfig', () => {
 
     expect(config).toEqual({
       app: {
-        port: 3000,
+        port: 8080,
         environment: 'development',
       },
       jwt: {
