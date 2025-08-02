@@ -38,8 +38,8 @@ COPY --from=build /app/dist ./dist
 COPY health-check.js ./
 
 # Copy and make entrypoint script executable
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
 
 # Change ownership to non-root user
 RUN chown -R nestjs:nodejs /app
@@ -53,5 +53,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node health-check.js || exit 1
 
 # Start the application
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "dist/main"]

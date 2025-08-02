@@ -31,4 +31,12 @@ export const envValidationSchema = Joi.object({
   TMDB_API_URL: Joi.string().required(),
   TMDB_API_KEY: Joi.string().required(),
   TMDB_MAX_PAGES: Joi.number().default(10),
+
+  // Rate Limiting - Token Bucket
+  TOKEN_BUCKET_CAPACITY: Joi.number().default(20),
+  TOKEN_BUCKET_REFILL_RATE: Joi.number().default(2),
+
+  // Rate Limiting - Fixed Window
+  FIXED_WINDOW_SIZE_MS: Joi.number().default(60000),
+  FIXED_WINDOW_MAX_REQUESTS: Joi.number().default(100),
 });
