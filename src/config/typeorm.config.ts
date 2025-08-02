@@ -17,7 +17,7 @@ const AppDataSource = new DataSource({
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
   entities: [Movie, Genre, Rating, User, Watchlist],
-  migrations: [join(__dirname, '..', 'database', 'migrations', '*.ts')],
+  migrations: [join(__dirname, '..', 'database', 'migrations', '*.js')],
   synchronize: false,
   migrationsRun: true,
   migrationsTransactionMode: 'each',

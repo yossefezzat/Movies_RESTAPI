@@ -9,8 +9,7 @@ import { UsersModule } from './users/users.module';
 import { WatchlistModule } from './watchlist/watchlist.module';
 import appConfig from './config/app.config';
 import { envValidationSchema } from './config/env.validation';
-import { redisStore } from 'cache-manager-redis-store';
-import { CacheManagerStore } from 'cache-manager';
+import { redisStore } from 'cache-manager-redis-yet';
 import { CorrelationIdMiddleware } from './common/middlewares/correlation-id.middleware';
 import { LoggerModule } from './common/services/logger/logger.module';
 
@@ -37,7 +36,7 @@ import { LoggerModule } from './common/services/logger/logger.module';
           password: configService.get<string>('redis.password'),
         });
         return {
-          store: store as unknown as CacheManagerStore,
+          store: store,
           ttl: (configService.get<number>('redis.ttl') ?? 60) * 60000,
         };
       },
