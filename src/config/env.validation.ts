@@ -17,6 +17,12 @@ export const envValidationSchema = Joi.object({
   // Password Hashing
   BCRYPT_SALT_ROUNDS: Joi.number().default(10),
 
+  // Redis
+  REDIS_HOST: Joi.string().default('localhost'),
+  REDIS_PORT: Joi.number().default(6379),
+  REDIS_PASSWORD: Joi.string().allow('').optional(),
+  REDIS_TTL_MS: Joi.number().default(60000),
+
   // Application
   PORT: Joi.number().default(3000),
   NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),

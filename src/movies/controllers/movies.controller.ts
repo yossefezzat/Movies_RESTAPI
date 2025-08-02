@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Query, Body, UseGuards, Param, Req } from '@nestjs/common';
+import { Controller, Get, Post, Query, Body, UseGuards, Param, Req, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import { CacheInterceptor } from '../../common/interceptors/cache.interceptor';
 import { MoviesService } from '../services/movies.service';
 import { MoviesFilterDto } from '../dto/movies-filter.dto';
 import { SearchMoviesDto } from '../dto/search-movies.dto';
@@ -18,6 +19,7 @@ export class MoviesController {
 
   @Get()
   @UseGuards(AccessTokenGuard)
+  @UseInterceptors(CacheInterceptor)
   @ApiOperation({ summary: 'Get all movies with filtering and pagination' })
   @ApiResponse({ status: 200, description: 'Movies retrieved successfully', type: MoviesListResponseDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -32,6 +34,7 @@ export class MoviesController {
 
   @Get('search')
   @UseGuards(AccessTokenGuard)
+  @UseInterceptors(CacheInterceptor)
   @ApiOperation({ summary: 'Search movies by title, genre, or other criteria' })
   @ApiResponse({ status: 200, description: 'Movies search results', type: MoviesListResponseDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -46,6 +49,7 @@ export class MoviesController {
 
   @Get(':id')
   @UseGuards(AccessTokenGuard)
+  @UseInterceptors(CacheInterceptor)
   @ApiOperation({ summary: 'Get a specific movie by ID' })
   @ApiParam({ name: 'id', description: 'Movie ID' })
   @ApiResponse({ status: 200, description: 'Movie retrieved successfully', type: Movie })
