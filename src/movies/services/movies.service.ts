@@ -10,6 +10,7 @@ import { MoviesFilterDto } from '../dto/movies-filter.dto';
 import { SearchMoviesDto } from '../dto/search-movies.dto';
 import { RateMovieDto } from '../dto/rate-movie.dto';
 import { MovieRatingStatsDto } from '../dto/rating-response.dto';
+import { AppLoggerService } from '../../common/services/logger/logger.service';
 
 @Injectable()
 export class MoviesService {
@@ -19,10 +20,19 @@ export class MoviesService {
     @InjectRepository(Rating)
     private readonly ratingRepository: Repository<Rating>,
     private readonly dataSource: DataSource,
-  ) {}
+    private readonly logger: AppLoggerService,
+  ) {
+    this.logger.setContext('MoviesService');
+  }
 
   async findAllMovies(filterDto: MoviesFilterDto): Promise<MoviesListDto> {
     const { page = 1, limit = 20, genres } = filterDto;
+
+    this.logger.log('Fetching movies from database', 'MoviesService', {
+      page,
+      limit,
+      genres: genres || 'none',
+    });
 
     const queryBuilder = this.movieRepository
       .createQueryBuilder('movie')
@@ -31,12 +41,19 @@ export class MoviesService {
 
     if (genres && genres.length > 0) {
       queryBuilder.andWhere('genre.name IN (:...genres)', { genres });
+      this.logger.debug('Applied genre filter', 'MoviesService', { genres });
     }
 
     const [movies, total] = await queryBuilder
       .skip((page - 1) * limit)
       .take(limit)
       .getManyAndCount();
+
+    this.logger.log('Successfully fetched movies from database', 'MoviesService', {
+      moviesCount: movies.length,
+      total,
+      totalPages: Math.ceil(total / limit),
+    });
 
     return {
       movies: new MovieView(movies).render() as MovieDto[],
@@ -47,6 +64,12 @@ export class MoviesService {
 
   async searchMovies(searchDto: SearchMoviesDto): Promise<MoviesListDto> {
     const { page = 1, limit = 20 } = searchDto;
+
+    this.logger.log('Searching movies in database', 'MoviesService', {
+      searchQuery: searchDto.query,
+      page,
+      limit,
+    });
 
     const queryBuilder = this.movieRepository
       .createQueryBuilder('movie')
@@ -61,6 +84,13 @@ export class MoviesService {
       .take(limit)
       .getManyAndCount();
 
+    this.logger.log('Successfully searched movies in database', 'MoviesService', {
+      searchQuery: searchDto.query,
+      resultsCount: movies.length,
+      total,
+      totalPages: Math.ceil(total / limit),
+    });
+
     return {
       movies: new MovieView(movies).render() as MovieDto[],
       total,
@@ -69,14 +99,22 @@ export class MoviesService {
   }
 
   async findOneMovie(id: string): Promise<MovieDto> {
+    this.logger.log('Fetching single movie from database', 'MoviesService', { movieId: id });
+
     const movie = await this.movieRepository.findOne({
       where: { id },
       relations: ['genres'],
     });
 
     if (!movie) {
+      this.logger.warn('Movie not found in database', 'MoviesService', { movieId: id });
       throw new NotFoundException('Movie not found');
     }
+
+    this.logger.log('Successfully fetched movie from database', 'MoviesService', {
+      movieId: id,
+      movieTitle: movie.title,
+    });
 
     return new MovieView(movie).render() as MovieDto;
   }
@@ -84,7 +122,15 @@ export class MoviesService {
   async rateMovie(movieId: string, userId: string, rateMovieDto: RateMovieDto): Promise<MovieRatingStatsDto> {
     const { rating } = rateMovieDto;
 
+    this.logger.log('Starting movie rating transaction', 'MoviesService', {
+      movieId,
+      userId,
+      rating,
+    });
+
     return await this.dataSource.transaction('REPEATABLE READ', async (manager) => {
+      this.logger.debug('Checking if movie exists with lock', 'MoviesService', { movieId });
+
       // Check if movie exists with row-level lock
       const movie = await manager.findOne(Movie, {
         where: { id: movieId },
@@ -92,8 +138,11 @@ export class MoviesService {
       });
 
       if (!movie) {
+        this.logger.warn('Movie not found for rating', 'MoviesService', { movieId });
         throw new NotFoundException('Movie not found');
       }
+
+      this.logger.debug('Checking for existing rating', 'MoviesService', { movieId, userId });
 
       const existingRating = await manager.findOne(Rating, {
         where: { userId, movieId },
@@ -102,10 +151,19 @@ export class MoviesService {
       let isUpdate = false;
 
       if (existingRating) {
+        this.logger.log('Updating existing rating', 'MoviesService', {
+          movieId,
+          userId,
+          oldRating: existingRating.rating,
+          newRating: rating,
+        });
+
         existingRating.rating = rating;
         await manager.save(Rating, existingRating);
         isUpdate = true;
       } else {
+        this.logger.log('Creating new rating', 'MoviesService', { movieId, userId, rating });
+
         const newRating = manager.create(Rating, {
           userId,
           movieId,
@@ -113,6 +171,8 @@ export class MoviesService {
         });
         await manager.save(Rating, newRating);
       }
+
+      this.logger.debug('Recalculating movie rating statistics', 'MoviesService', { movieId });
 
       // Recalculate movie rating statistics within the same transaction
       const result = await manager
@@ -125,16 +185,32 @@ export class MoviesService {
       const averageRating = result.averageRating ? Math.round(parseFloat(result.averageRating) * 10) / 10 : 0;
       const ratingCount = parseInt(result.ratingCount) || 0;
 
+      this.logger.debug('Updating movie with new rating statistics', 'MoviesService', {
+        movieId,
+        averageRating,
+        ratingCount,
+      });
+
       // Update movie with new rating statistics
       await manager.update(Movie, movieId, {
         averageRating,
         ratingCount,
       });
 
+      const responseMessage = isUpdate ? 'Movie rating updated successfully' : 'Movie rated successfully';
+
+      this.logger.log('Movie rating transaction completed successfully', 'MoviesService', {
+        movieId,
+        userId,
+        averageRating,
+        ratingCount,
+        isUpdate,
+      });
+
       return {
         averageRating,
         ratingCount,
-        message: isUpdate ? 'Movie rating updated successfully' : 'Movie rated successfully',
+        message: responseMessage,
       };
     });
   }

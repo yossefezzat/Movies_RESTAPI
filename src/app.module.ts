@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppService } from './app.service';
 import AppDataSource from './config/typeorm.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -12,9 +12,12 @@ import appConfig from './config/app.config';
 import { envValidationSchema } from './config/env.validation';
 import { redisStore } from 'cache-manager-redis-store';
 import { CacheManagerStore } from 'cache-manager';
+import { CorrelationIdMiddleware } from './common/middlewares/correlation-id.middleware';
+import { LoggerModule } from './common/services/logger/logger.module';
 
 @Module({
   imports: [
+    LoggerModule,
     ConfigModule.forRoot({
       load: [appConfig],
       isGlobal: true,
@@ -49,4 +52,8 @@ import { CacheManagerStore } from 'cache-manager';
   ],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CorrelationIdMiddleware).forRoutes('/*path');
+  }
+}
