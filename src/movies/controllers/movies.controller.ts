@@ -10,12 +10,15 @@ import { MovieDto } from '../dto/movie.dto';
 import { RateMovieDto } from '../dto/rate-movie.dto';
 import { MovieRatingStatsDto } from '../dto/rating-response.dto';
 import { Movie } from '../entities/movie.entity';
+import { AppLoggerService } from '../../common/services/logger/logger.service';
 
 @ApiTags('Movies')
 @Controller('movies')
 @ApiBearerAuth('Bearer')
 export class MoviesController {
-  constructor(private readonly moviesService: MoviesService) {}
+  constructor(private readonly moviesService: MoviesService, private readonly logger: AppLoggerService) {
+    this.logger.setContext('MoviesController');
+  }
 
   @Get()
   @UseGuards(AccessTokenGuard)
@@ -24,7 +27,14 @@ export class MoviesController {
   @ApiResponse({ status: 200, description: 'Movies retrieved successfully', type: MoviesListResponseDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async findAll(@Query() filterDto: MoviesFilterDto): Promise<MoviesListResponseDto> {
+    this.logger.log('Finding all movies with filters', 'MoviesController', { filterDto });
+
     const result = await this.moviesService.findAllMovies(filterDto);
+
+    this.logger.log('Successfully retrieved movies', 'MoviesController', {
+      totalMovies: result.total,
+      currentPage: filterDto.page || 1,
+    });
 
     return {
       ...result,
@@ -39,7 +49,15 @@ export class MoviesController {
   @ApiResponse({ status: 200, description: 'Movies search results', type: MoviesListResponseDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async searchMovies(@Query() searchDto: SearchMoviesDto): Promise<MoviesListResponseDto> {
+    this.logger.log('Searching movies', 'MoviesController', { searchDto });
+
     const result = await this.moviesService.searchMovies(searchDto);
+
+    this.logger.log('Successfully searched movies', 'MoviesController', {
+      searchQuery: searchDto.query,
+      totalResults: result.total,
+      currentPage: searchDto.page || 1,
+    });
 
     return {
       ...result,
@@ -56,7 +74,16 @@ export class MoviesController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Movie not found' })
   async findOne(@Param('id') id: string): Promise<MovieDto> {
-    return this.moviesService.findOneMovie(id);
+    this.logger.log('Finding movie by ID', 'MoviesController', { movieId: id });
+
+    const movie = await this.moviesService.findOneMovie(id);
+
+    this.logger.log('Successfully retrieved movie', 'MoviesController', {
+      movieId: id,
+      movieTitle: movie.title,
+    });
+
+    return movie;
   }
 
   @Post(':id/rate')
@@ -69,6 +96,22 @@ export class MoviesController {
   @ApiResponse({ status: 404, description: 'Movie not found' })
   async rateMovie(@Param('id') movieId: string, @Body() rateMovieDto: RateMovieDto, @Req() req: any): Promise<MovieRatingStatsDto> {
     const userId = req.user['id'];
-    return this.moviesService.rateMovie(movieId, userId, rateMovieDto);
+
+    this.logger.log('Rating movie', 'MoviesController', {
+      movieId,
+      userId,
+      rating: rateMovieDto.rating,
+    });
+
+    const result = await this.moviesService.rateMovie(movieId, userId, rateMovieDto);
+
+    this.logger.log('Successfully rated movie', 'MoviesController', {
+      movieId,
+      userId,
+      newAverageRating: result.averageRating,
+      totalRatings: result.ratingCount,
+    });
+
+    return result;
   }
 }
