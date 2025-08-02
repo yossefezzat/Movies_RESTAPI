@@ -6,6 +6,7 @@ import { AddMovieToWatchlistDto } from '../dto/add-movie-to-watchlist.dto';
 import { RemoveMovieFromWatchlistDto } from '../dto/remove-movie-from-watchlist.dto';
 import { Watchlist } from '../entities/watchlist.entity';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { AppLoggerService } from '../../common/services/logger/logger.service';
 
 describe('WatchlistController', () => {
   let controller: WatchlistController;
@@ -54,12 +55,24 @@ describe('WatchlistController', () => {
       removeMovieFromWatchlist: jest.fn(),
     };
 
+    const mockLoggerService = {
+      setContext: jest.fn(),
+      log: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [WatchlistController],
       providers: [
         {
           provide: WatchlistService,
           useValue: mockWatchlistService,
+        },
+        {
+          provide: AppLoggerService,
+          useValue: mockLoggerService,
         },
       ],
     })

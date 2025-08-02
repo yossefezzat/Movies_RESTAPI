@@ -8,6 +8,7 @@ import { User } from '../../users/entities/user.entity';
 import { Movie } from '../../movies/entities/movie.entity';
 import { AddMovieToWatchlistDto } from '../dto/add-movie-to-watchlist.dto';
 import { RemoveMovieFromWatchlistDto } from '../dto/remove-movie-from-watchlist.dto';
+import { AppLoggerService } from '../../common/services/logger/logger.service';
 
 describe('WatchlistService', () => {
   let service: WatchlistService;
@@ -68,6 +69,14 @@ describe('WatchlistService', () => {
       findOne: jest.fn(),
     };
 
+    const mockLoggerService = {
+      setContext: jest.fn(),
+      log: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         WatchlistService,
@@ -82,6 +91,10 @@ describe('WatchlistService', () => {
         {
           provide: getRepositoryToken(Movie),
           useValue: mockMovieRepository,
+        },
+        {
+          provide: AppLoggerService,
+          useValue: mockLoggerService,
         },
       ],
     }).compile();
@@ -220,6 +233,7 @@ describe('WatchlistService', () => {
           user: { id: userId },
           movie: { id: removeMovieDto.movieId },
         },
+        relations: ['movie'],
       });
       expect(watchlistRepository.remove).toHaveBeenCalledWith(mockWatchlistItem);
     });
@@ -235,6 +249,7 @@ describe('WatchlistService', () => {
           user: { id: userId },
           movie: { id: removeMovieDto.movieId },
         },
+        relations: ['movie'],
       });
     });
   });

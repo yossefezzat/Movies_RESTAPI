@@ -9,6 +9,7 @@ import { MovieView } from '../views/movie.view';
 import { MoviesFilterDto } from '../dto/movies-filter.dto';
 import { SearchMoviesDto } from '../dto/search-movies.dto';
 import { RateMovieDto } from '../dto/rate-movie.dto';
+import { AppLoggerService } from '../../common/services/logger/logger.service';
 
 describe('MoviesService', () => {
   let service: MoviesService;
@@ -87,6 +88,14 @@ describe('MoviesService', () => {
       createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
     };
 
+    const mockLoggerService = {
+      setContext: jest.fn(),
+      log: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MoviesService,
@@ -108,6 +117,10 @@ describe('MoviesService', () => {
           useValue: {
             transaction: jest.fn().mockImplementation((isolation, callback) => callback(manager)),
           },
+        },
+        {
+          provide: AppLoggerService,
+          useValue: mockLoggerService,
         },
       ],
     }).compile();

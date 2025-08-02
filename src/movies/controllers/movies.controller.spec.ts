@@ -7,6 +7,9 @@ import { SearchMoviesDto } from '../dto/search-movies.dto';
 import { RateMovieDto } from '../dto/rate-movie.dto';
 import { MovieDto } from '../dto/movie.dto';
 import { MovieRatingStatsDto } from '../dto/rating-response.dto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { ConfigService } from '@nestjs/config';
+import { AppLoggerService } from '../../common/services/logger/logger.service';
 
 describe('MoviesController', () => {
   let controller: MoviesController;
@@ -53,12 +56,43 @@ describe('MoviesController', () => {
       getUserMovieRating: jest.fn(),
     };
 
+    const mockCacheManager = {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+      reset: jest.fn(),
+    };
+
+    const mockConfigService = {
+      get: jest.fn().mockReturnValue(3600),
+    };
+
+    const mockLoggerService = {
+      setContext: jest.fn(),
+      log: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [MoviesController],
       providers: [
         {
           provide: MoviesService,
           useValue: mockMoviesService,
+        },
+        {
+          provide: CACHE_MANAGER,
+          useValue: mockCacheManager,
+        },
+        {
+          provide: ConfigService,
+          useValue: mockConfigService,
+        },
+        {
+          provide: AppLoggerService,
+          useValue: mockLoggerService,
         },
       ],
     })

@@ -1,5 +1,4 @@
 import { MiddlewareConsumer, Module } from '@nestjs/common';
-import { AppService } from './app.service';
 import AppDataSource from './config/typeorm.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -50,7 +49,6 @@ import { LoggerModule } from './common/services/logger/logger.module';
     UsersModule,
     WatchlistModule,
   ],
-  providers: [AppService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
